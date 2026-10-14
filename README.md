@@ -1,6 +1,6 @@
-# uuidgenv7
+# uuidgenv7: generate UUID v7 in the macOS terminal
 
-Print UUIDv7 values ([RFC 9562](https://www.rfc-editor.org/rfc/rfc9562)) from the terminal.
+`uuidgenv7` is a small Go CLI that prints UUID version 7 values ([RFC 9562](https://www.rfc-editor.org/rfc/rfc9562)) on macOS. It works like the built-in `uuidgen` command, which only produces random version 4 UUIDs, and installs with Homebrew.
 
 ```console
 $ uuidgenv7
@@ -12,13 +12,19 @@ $ uuidgenv7 -n 3
 01a11878-441c-7af1-89e3-57df594bdb8f
 ```
 
+## Why UUID v7
+
+A UUIDv7 starts with a millisecond timestamp, so values sort in the order they were created. That makes them a good fit for database primary keys: new rows land at the end of the index instead of at random positions, as they do with version 4 UUIDs. The remaining bits are random, so values are still unique without coordination between machines.
+
 ## Install
+
+With Homebrew, on macOS 13 or later (Apple Silicon and Intel):
 
 ```sh
 brew install jimjonah/tap/uuidgenv7
 ```
 
-Or with Go:
+Or with Go, on any platform Go supports:
 
 ```sh
 go install github.com/jimjonah/uuidgenv7@latest
@@ -40,6 +46,8 @@ uuidgenv7 -h | --help
 
 Options take one or two dashes, and a value can follow a space or `=`: `-n 5`, `--n 5` and `--n=5` are the same.
 
+Output is lowercase, the canonical form in RFC 9562; macOS `uuidgen` prints uppercase.
+
 UUIDs from a single run are strictly increasing, so the output of `-n` is already sorted. Separate runs in the same millisecond are still unique, but aren't guaranteed to sort in the order they ran.
 
 To save a batch to a file:
@@ -48,33 +56,10 @@ To save a batch to a file:
 uuidgenv7 -n 1000 > ids.txt
 ```
 
-A local build reports its version as `dev`; released builds report the release number, e.g. `0.1.0`.
+The Homebrew install reports its release number, e.g. `0.1.0`. Copies built with Go, including `go install`, report `dev`.
 
 Exit status is 0 on success and 2 for invalid usage, such as `-n 0` or an unknown option.
 
-## Releasing
+## License
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`, which uses [GoReleaser](https://goreleaser.com) to upload macOS binaries (Intel and Apple Silicon) to a GitHub release and push an updated cask to `jimjonah/homebrew-tap`.
-
-One-time setup:
-
-1. Create two public GitHub repos: `jimjonah/uuidgenv7` and `jimjonah/homebrew-tap`. The tap can start empty.
-2. Create a fine-grained personal access token with **Contents: read and write** on `homebrew-tap`.
-3. In the `uuidgenv7` repo, go to Settings → Secrets and variables → Actions and add the token as `HOMEBREW_TAP_GITHUB_TOKEN`.
-
-To cut a release:
-
-```sh
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-To check the config locally without publishing anything:
-
-```sh
-brew install goreleaser
-goreleaser check
-goreleaser release --snapshot --clean
-```
-
-
+MIT. See [LICENSE](LICENSE).
