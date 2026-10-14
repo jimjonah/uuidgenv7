@@ -12,8 +12,6 @@ $ uuidgenv7 -n 3
 01a11878-441c-7af1-89e3-57df594bdb8f
 ```
 
-UUIDs from a single invocation are strictly increasing, so `-n` output is already sorted.
-
 ## Install
 
 ```sh
@@ -28,10 +26,31 @@ go install github.com/jimjonah/uuidgenv7@latest
 
 ## Usage
 
-| Flag | Meaning |
+```
+uuidgenv7 [-n count]
+uuidgenv7 -v | --version
+uuidgenv7 -h | --help
+```
+
+| Option | Meaning |
 | --- | --- |
 | `-n count` | Number of UUIDs to print, one per line. Default 1. |
-| `-version` | Print the version and exit. |
+| `-v`, `--version` | Print the version and exit. |
+| `-h`, `--help` | Print the help and exit. |
+
+Options take one or two dashes, and a value can follow a space or `=`: `-n 5`, `--n 5` and `--n=5` are the same.
+
+UUIDs from a single run are strictly increasing, so the output of `-n` is already sorted. Separate runs in the same millisecond are still unique, but aren't guaranteed to sort in the order they ran.
+
+To save a batch to a file:
+
+```sh
+uuidgenv7 -n 1000 > ids.txt
+```
+
+A local build reports its version as `dev`; released builds report the release number, e.g. `0.1.0`.
+
+Exit status is 0 on success and 2 for invalid usage, such as `-n 0` or an unknown option.
 
 ## Releasing
 

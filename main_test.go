@@ -75,12 +75,12 @@ func TestRun(t *testing.T) {
 		{"default", nil, 0, 1},
 		{"n", []string{"-n", "5"}, 0, 5},
 		{"n equals form", []string{"-n=3"}, 0, 3},
+		{"n double dash", []string{"--n", "2"}, 0, 2},
 		{"zero", []string{"-n", "0"}, 2, 0},
 		{"negative", []string{"-n", "-1"}, 2, 0},
 		{"not a number", []string{"-n", "abc"}, 2, 0},
 		{"stray argument", []string{"5"}, 2, 0},
 		{"unknown flag", []string{"-x"}, 2, 0},
-		{"help", []string{"-h"}, 0, 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -107,12 +107,47 @@ func TestRun(t *testing.T) {
 	}
 }
 
-func TestRunVersion(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	if code := run([]string{"-version"}, &stdout, &stderr); code != 0 {
-		t.Fatalf("exit code %d", code)
+func TestRunHelp(t *testing.T) {
+	for _, arg := range []string{"-h", "--help", "-help"} {
+		t.Run(arg, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if code := run([]string{arg}, &stdout, &stderr); code != 0 {
+				t.Fatalf("exit code %d", code)
+			}
+			if stdout.String() != usage {
+				t.Errorf("stdout is %q, want the usage text", stdout.String())
+			}
+			if stderr.Len() != 0 {
+				t.Errorf("unexpected stderr: %q", stderr.String())
+			}
+		})
 	}
-	if got := strings.TrimSpace(stdout.String()); got != version {
-		t.Fatalf("got %q, want %q", got, version)
+}
+
+func TestRunErrorShowsHint(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	run([]string{"-x"}, &stdout, &stderr)
+	if !strings.Contains(stderr.String(), "flag provided but not defined: -x") {
+		t.Errorf("stderr missing the error: %q", stderr.String())
+	}
+	if !strings.Contains(stderr.String(), helpHint) {
+		t.Errorf("stderr missing the help hint: %q", stderr.String())
+	}
+	if stdout.Len() != 0 {
+		t.Errorf("unexpected stdout: %q", stdout.String())
+	}
+}
+
+func TestRunVersion(t *testing.T) {
+	for _, arg := range []string{"-version", "--version", "-v", "--v"} {
+		t.Run(arg, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if code := run([]string{arg}, &stdout, &stderr); code != 0 {
+				t.Fatalf("exit code %d", code)
+			}
+			if got := strings.TrimSpace(stdout.String()); got != version {
+				t.Fatalf("got %q, want %q", got, version)
+			}
+		})
 	}
 }
